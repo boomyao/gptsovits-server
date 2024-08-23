@@ -1,0 +1,4 @@
+hyperpyyaml
+torch
+numpy
+huggingface_hub

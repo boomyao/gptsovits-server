@@ -1,0 +1,5 @@
+/pretrained_models/*
+
+.DS_Store
+
+__pycache__/
