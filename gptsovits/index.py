@@ -3,8 +3,12 @@ from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel
 import numpy as np
 from huggingface_hub import snapshot_download
+from services.model_file_service import ModelFileService
 
 def download_model(id: str) -> str:
+    model_file_service = ModelFileService.get_instance()
+    model_file_service.download_model(id)
+    model_file_service.download_presets(id)
     return 'pretrained_models/voices/{}'.format(id)
 
 class GPTSovits:

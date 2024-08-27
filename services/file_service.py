@@ -1,4 +1,4 @@
-import os, logging, shutil
+import os, logging, shutil, uuid, io
 import boto3
 from botocore.client import Config
 
@@ -26,12 +26,38 @@ class FileService:
         except Exception as e:
             self.logger.error(f"上传文件时出错: {e}", exc_info=True)
             return False
+    
+    def upload_tmp_file(self, file_or_bytes, content_type=None, ext=None):
+        id = str(uuid.uuid4())
+        
+        if isinstance(file_or_bytes, str):
+            # 如果是文件路径
+            ext = ext or file_or_bytes.split('.')[-1]
+            object_name = f'tmp/{id}.{ext}'
+            self.upload_file(file_or_bytes, object_name)
+        elif isinstance(file_or_bytes, (io.BytesIO, bytes)):
+            # 如果是BytesIO对象或bytes
+            ext = ext or 'bin'  # 默认扩展名
+            object_name = f'tmp/{id}.{ext}'
+            try:
+                if isinstance(file_or_bytes, io.BytesIO):
+                    file_or_bytes.seek(0)
+                extra_args = {'ContentType': content_type} if content_type else {}
+                self.s3.upload_fileobj(file_or_bytes, self.bucket_name, object_name, ExtraArgs=extra_args)
+            except Exception as e:
+                self.logger.error(f"上传BytesIO/bytes时出错: {e}", exc_info=True)
+                return None
+        else:
+            self.logger.error("不支持的文件类型")
+            return None
+
+        return object_name
 
     def download_file(self, object_name, file_path):
         cache_path = os.path.join(self.cache_dir, object_name)
         if os.path.exists(cache_path):
             self.logger.info(f"从缓存返回文件: {object_name}")
-            os.rename(cache_path, file_path)
+            shutil.copy(cache_path, file_path)
             return True
 
         try:

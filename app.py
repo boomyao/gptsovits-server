@@ -1,17 +1,43 @@
-
-
+from flask import Flask, request, jsonify
 from gptsovits_manager import GPTSovitsManager
+from services.file_service import FileService
 import soundfile as sf
+import io
+import base64
 
-def main():
-  mgr = GPTSovitsManager()
+app = Flask(__name__)
 
-  id = '80ffe8c8-a205-49b5-a745-470e1e47c02f'
-  gptsovits = mgr.get(id)
+# 初始化GPTSovitsManager
+mgr = GPTSovitsManager()
+file_service = FileService.get_instance()
 
-  audio = gptsovits.inference('你好呀', '2feac86a-c5ab-4751-939a-9b94f19e1872')
+@app.route('/tts', methods=['POST'])
+def text_to_speech():
+    data = request.json
+    if not data or 'text' not in data or 'model_id' not in data or 'ref_audio_id' not in data:
+        return jsonify({'error': '缺少必要的参数'}), 400
 
-  sf.write('output.wav', audio, 32000)
+    text = data['text']
+    model_id = data['model_id']
+    ref_audio_id = data['ref_audio_id']
+
+    try:
+        # 获取模型实例
+        gptsovits = mgr.get(model_id)
+
+        # 执行推理
+        audio = gptsovits.inference(text, ref_audio_id)
+
+        # 将音频数据转换为字节流
+        audio_bytes = io.BytesIO()
+        sf.write(audio_bytes, audio, 32000, format='wav')
+
+        object_name = file_service.upload_tmp_file(audio_bytes, ext='wav')
+
+        return jsonify({'object_name': object_name})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-  main()
+    app.run(host='0.0.0.0', port=6000)
