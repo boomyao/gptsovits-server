@@ -6,10 +6,10 @@ import soundfile as sf
 def main():
   mgr = GPTSovitsManager()
 
-  id = '001'
+  id = '80ffe8c8-a205-49b5-a745-470e1e47c02f'
   gptsovits = mgr.get(id)
 
-  audio = gptsovits.inference('你好呀', 'source.mp3_0000021120_0000223040')
+  audio = gptsovits.inference('你好呀', '2feac86a-c5ab-4751-939a-9b94f19e1872')
 
   sf.write('output.wav', audio, 32000)
 
