@@ -17,3 +17,8 @@ def get_symbols():
     if not hasattr(get_symbols, "symbols"):
         get_symbols.symbols = generate_symbols()
     return get_symbols.symbols
+
+def get_symbols_dict():
+    if not hasattr(get_symbols_dict, "symbols"):
+        get_symbols_dict.symbols = {s: i for i, s in enumerate(get_symbols())}
+    return get_symbols_dict.symbols

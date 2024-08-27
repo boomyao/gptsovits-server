@@ -1,10 +1,17 @@
-from gptsovits_manager import GPTSOVITSManager
+
+
+from gptsovits_manager import GPTSovitsManager
+import soundfile as sf
 
 def main():
-  gptsovitsMgr = GPTSOVITSManager()
+  mgr = GPTSovitsManager()
 
-  gptsovits = gptsovitsMgr.get('xxxx')
+  id = '001'
+  gptsovits = mgr.get(id)
 
-  audio = gptsovits(text, ref_id)
+  audio = gptsovits.inference('你好呀', 'source.mp3_0000021120_0000223040')
 
-  return audio
+  sf.write('output.wav', audio, 32000)
+
+if __name__ == '__main__':
+  main()

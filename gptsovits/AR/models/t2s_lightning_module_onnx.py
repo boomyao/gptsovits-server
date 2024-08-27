@@ -14,7 +14,7 @@ from AR.modules.optim import ScaledAdam
 
 
 class Text2SemanticLightningModule(LightningModule):
-    def __init__(self, config, output_dir, is_train=True):
+    def __init__(self, config, output_dir, is_train=False):
         super().__init__()
         self.config = config
         self.top_k = 3

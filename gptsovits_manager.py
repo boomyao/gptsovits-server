@@ -1,4 +1,4 @@
-import os
+from gptsovits.index import GPTSovits
 
 class GPTSovitsManager:
     def __init__(self):

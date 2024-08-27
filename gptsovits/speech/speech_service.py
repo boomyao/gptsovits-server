@@ -20,7 +20,7 @@ class SpeechService:
 
   def process_audio(self, audio: bytes, ref_prompt = None):
     ref_features = self._get_ref_features(audio) if ref_prompt else None
-    mel_specs = self._get_mel_spec(audio)
+    mel_specs = self._get_mel_specs(audio)
     return ref_features, mel_specs
   
   def _get_ref_features(self, ref_audio: bytes):
@@ -50,6 +50,7 @@ class SpeechService:
     return ssl_content
   
   def _get_mel_specs(self, audio: bytes):
+    audio, _ = librosa.load(io.BytesIO(audio), sr=SAMPLE_RATE)
     audio = torch.FloatTensor(audio)
     maxx=audio.abs().max()
     if(maxx>1):audio/=min(2,maxx)

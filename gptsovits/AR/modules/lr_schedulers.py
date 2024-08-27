@@ -1,13 +1,7 @@
 # modified from https://github.com/yangdongchao/SoundStorm/blob/master/soundstorm/s1/AR/modules/lr_schedulers.py
 # reference: https://github.com/lifeiteng/vall-e
 import math
-
 import torch
-from matplotlib import pyplot as plt
-from torch import nn
-from torch.optim import Adam
-
-
 class WarmupCosineLRSchedule(torch.optim.lr_scheduler._LRScheduler):
     """
     Implements Warmup learning rate schedule until 'warmup_steps', going from 'init_lr' to 'peak_lr' for multiple optimizers.
@@ -65,19 +59,3 @@ class WarmupCosineLRSchedule(torch.optim.lr_scheduler._LRScheduler):
         self._current_step += 1
         return self.lr
 
-
-if __name__ == "__main__":
-    m = nn.Linear(10, 10)
-    opt = Adam(m.parameters(), lr=1e-4)
-    s = WarmupCosineLRSchedule(
-        opt, 1e-6, 2e-4, 1e-6, warmup_steps=2000, total_steps=20000, current_step=0
-    )
-    lrs = []
-    for i in range(25000):
-        s.step()
-        lrs.append(s.lr)
-        print(s.lr)
-
-    plt.plot(lrs)
-    plt.plot(range(0, 25000), lrs)
-    plt.show()

@@ -9,6 +9,7 @@ class GPTSovitsModel:
     self.sovits = sovits
 
     self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    self.is_half = True if self.device == 'cuda' else False
 
     self.top_k = 15
     self.top_p = 1
@@ -16,10 +17,21 @@ class GPTSovitsModel:
     self.hz = 50
     self.max_sec = 54
 
+  def load(self, gpt_path, sovits_path):
+    self.gpt.load_state_dict(torch.load(gpt_path, map_location=self.device)['weight'])
+    self.sovits.load_state_dict(torch.load(sovits_path, map_location=self.device)['weight'])
+    if self.is_half:
+      self.gpt.half()
+      self.sovits.half()
+    self.gpt.to(self.device)
+    self.sovits.to(self.device)
+    self.gpt.eval()
+    self.sovits.eval()
+
   def inference(self, text, bert_features, phoneme, all_phoneme_ids, all_phoneme_len,ref_features,ref_mel_specs, speed):
-    semantic_embedding = self._extract_embeddings(ref_features) if ref_features else None
+    semantic_embedding = self._extract_embeddings(ref_features) if ref_features is not None else None
     pred_semantic = self._extract_pred_semantic(all_phoneme_ids, all_phoneme_len, semantic_embedding, bert_features)
-    audio = self.sovits(pred_semantic, phoneme, ref_mel_specs, speed)
+    audio = self.sovits.decode(pred_semantic, phoneme, ref_mel_specs, speed).detach().cpu().numpy()[0, 0]
     max_audio=np.abs(audio).max()#简单防止16bit爆音
     if max_audio>1:audio/=max_audio
     return audio
@@ -49,3 +61,4 @@ class GPTSovitsModel:
     codes = self.sovits.extract_latent(ref_features)
     prompt_semantic = codes[0, 0]
     prompt = prompt_semantic.unsqueeze(0).to(self.device)
+    return prompt

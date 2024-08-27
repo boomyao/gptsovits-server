@@ -4,7 +4,7 @@ from gptsovits.text.phoneme_converter import PhonemeConverter
 from gptsovits.text.constants import PUNCTUATION
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 import jieba_fast.posseg as psg
-from pypinyin import Style
+from pypinyin import Style, lazy_pinyin
 from pypinyin.contrib.tone_convert import to_initials, to_finals_tone3
 from .tone_sandhi import ToneSandhi
 
@@ -114,13 +114,27 @@ class ChinesePhonemeConverter(PhonemeConverter):
         for word, pos in seg_cut:
             if pos == "eng":
                 continue
-            sub_initials, sub_finals = self._get_initials_finals(word)
+            sub_initials, sub_finals = self._extract_initials_finals_word(word)
             sub_finals = self.tone_modifier.modified_tone(word, pos, sub_finals)
             sub_initials, sub_finals = self._merge_erhua(sub_initials, sub_finals, word, pos)
 
             initials.extend(sub_initials)
             finals.extend(sub_finals)
 
+        return initials, finals
+    
+    def _extract_initials_finals_word(self, word):
+        initials = []
+        finals = []
+
+        orig_initials = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.INITIALS)
+        orig_finals = lazy_pinyin(
+            word, neutral_tone_with_five=True, style=Style.FINALS_TONE3
+        )
+
+        for c, v in zip(orig_initials, orig_finals):
+            initials.append(c)
+            finals.append(v)
         return initials, finals
     
     def _extract_initials_finals(self, word_pinyins):
@@ -169,9 +183,10 @@ class ChinesePhonemeConverter(PhonemeConverter):
         else:
             v_without_tone = v[:-1]
             tone = v[-1]
+            assert tone in "12345"
             pinyin = self._normalize_pinyin(c, v_without_tone)
 
-            assert pinyin in pinyin_to_symbol_map, (pinyin, seg, c + v)
+            assert pinyin in pinyin_to_symbol_map.keys(), (pinyin, seg, c + v)
             new_c, new_v = pinyin_to_symbol_map[pinyin].split(" ")
             new_v += tone
             return [new_c, new_v]
@@ -181,8 +196,15 @@ class ChinesePhonemeConverter(PhonemeConverter):
             v_rep_map = {"uei": "ui", "iou": "iu", "uen": "un"}
             return c + v_rep_map.get(v_without_tone, v_without_tone)
         else:
-            pinyin_rep_map = {"ing": "ying", "i": "yi", "in": "yin", "u": "wu"}
-            return pinyin_rep_map.get(v_without_tone, v_without_tone)
+            pinyin = c + v_without_tone
+            pinyin_rep_map = { "ing": "ying", "i": "yi", "in": "yin", "u": "wu" }
+            if pinyin in pinyin_rep_map.keys():
+                pinyin = pinyin_rep_map[pinyin]
+            else:
+                single_rep_map = { "v": "yu", "e": "e", "i": "y", "u": "w" }
+                if pinyin[0] in single_rep_map.keys():
+                    pinyin = single_rep_map[pinyin[0]] + pinyin[1:]
+            return pinyin
     
     def _process_phoneme_lengths(self, initials, finals):
         return [1 if c == v else 2 for c, v in zip(initials, finals)]

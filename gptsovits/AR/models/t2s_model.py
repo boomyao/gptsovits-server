@@ -5,21 +5,18 @@ from typing import List, Optional
 import torch
 from tqdm import tqdm
 
-from AR.models.utils import make_pad_mask
-from AR.models.utils import (
+from .utils import make_pad_mask
+from .utils import (
     topk_sampling,
     sample,
-    logits_to_probs,
-    multinomial_sample_one_no_sync,
     dpo_loss,
     make_reject_y,
     get_batch_logps
 )
-from AR.modules.embedding import SinePositionalEmbedding
-from AR.modules.embedding import TokenEmbedding
-from AR.modules.transformer import LayerNorm
-from AR.modules.transformer import TransformerEncoder
-from AR.modules.transformer import TransformerEncoderLayer
+from ..modules.embedding import SinePositionalEmbedding
+from ..modules.embedding import TokenEmbedding
+from ..modules.transformer import TransformerEncoder
+from ..modules.transformer import TransformerEncoderLayer
 from torch import nn
 from torch.nn import functional as F
 from torchmetrics.classification import MulticlassAccuracy
@@ -257,18 +254,16 @@ class T2STransformer:
 
 
 class Text2SemanticDecoder(nn.Module):
-    def __init__(self, config, norm_first=False, top_k=3):
+    def __init__(self, config, top_k=3):
         super(Text2SemanticDecoder, self).__init__()
-        self.model_dim = config["model"]["hidden_dim"]
-        self.embedding_dim = config["model"]["embedding_dim"]
-        self.num_head = config["model"]["head"]
-        self.num_layers = config["model"]["n_layer"]
-        self.norm_first = norm_first
-        self.vocab_size = config["model"]["vocab_size"]
-        self.phoneme_vocab_size = config["model"]["phoneme_vocab_size"]
-        self.p_dropout = config["model"]["dropout"]
-        self.EOS = config["model"]["EOS"]
-        self.norm_first = norm_first
+        self.model_dim = config["hidden_dim"]
+        self.embedding_dim = config["embedding_dim"]
+        self.num_head = config["head"]
+        self.num_layers = config["n_layer"]
+        self.vocab_size = config["vocab_size"]
+        self.phoneme_vocab_size = config["phoneme_vocab_size"]
+        self.p_dropout = config["dropout"]
+        self.EOS = config["EOS"]
         assert self.EOS == self.vocab_size - 1
         # should be same as num of kmeans bin
         # assert self.EOS == 1024
@@ -293,10 +288,8 @@ class Text2SemanticDecoder(nn.Module):
                 dim_feedforward=self.model_dim * 4,
                 dropout=0.1,
                 batch_first=True,
-                norm_first=norm_first,
             ),
             num_layers=self.num_layers,
-            norm=LayerNorm(self.model_dim) if norm_first else None,
         )
 
         self.ar_predict_layer = nn.Linear(self.model_dim, self.vocab_size, bias=False)
