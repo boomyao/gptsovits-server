@@ -13,7 +13,7 @@ class FileService:
             config=Config(signature_version='s3v4'),
             region_name='auto'
         )
-        self.cache_dir = os.getenv('CACHE_DIR', '/tmp/r2_cache')
+        self.cache_dir = os.getenv('R2_CACHE_DIR', '/tmp/r2_cache')
         os.makedirs(self.cache_dir, exist_ok=True)
 
     def upload_file(self, file_path, object_name=None):
