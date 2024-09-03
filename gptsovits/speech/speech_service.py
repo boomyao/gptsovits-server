@@ -29,9 +29,6 @@ class SpeechService:
     
     wav16k, sr = librosa.load(audio_file, sr=16000)
     
-    if wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000:
-        raise ValueError("Invalid audio length")
-    
     wav16k = torch.from_numpy(wav16k)
     zero_wav = self.get_zero_wav(sr)
     zero_wav_torch = torch.from_numpy(zero_wav)

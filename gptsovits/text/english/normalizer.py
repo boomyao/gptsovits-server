@@ -9,7 +9,7 @@ def replace_consecutive_punctuation(text):
     punctuations = ''.join(re.escape(p) for p in PUNCTUATION)
     return re.sub(f'([{punctuations}])([{punctuations}])+', r'\1', text)
 
-class ChineseTextNormalizer(TextNormalizer):
+class EnglishTextNormalizer(TextNormalizer):
     def normalize_text(self, text: str) -> str:
         text = normalize_numbers(unicode(text))
         text = ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')

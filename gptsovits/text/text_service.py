@@ -1,8 +1,11 @@
 from typing import List
-
+import logging
 import torch
 from .text_processor import LanguageProcessorFactory
 from .phoneme_converter import PhonemeConverter
+import LangSegment
+
+logger = logging.getLogger(__name__)
 
 class TextService:
   def __init__(self, device='cuda', dtype=torch.float32):
@@ -12,10 +15,25 @@ class TextService:
     PhonemeConverter.set_device(device)
     PhonemeConverter.set_dtype(dtype)
 
+    LangSegment.setfilters(["zh","ja","en","ko"])
+
   def process_text(self, text: str, language = None):
-    language = self._detect_language(text) if not language else language
-    processor = LanguageProcessorFactory.get_processor(language)
-    return processor.process(text)
+    segments = []
+    for item in LangSegment.getTexts(text):
+      segments.append(item)
+
+    logger.debug(segments)
+
+    results = []
+    for segment in segments:
+       processor = LanguageProcessorFactory.get_processor(segment['lang'])
+       results.append(processor.process(segment['text']))
+
+    normalized_text = ''.join([result[0] for result in results])
+    phonemes = sum([result[1] for result in results], [])
+    bert_features = torch.cat([result[2] for result in results], dim=1)
+       
+    return normalized_text, phonemes, bert_features
   
   def process_text_batch(self, texts: List[str], language = None):
     return [self.process_text(text, language) for text in texts]
@@ -58,7 +76,3 @@ class TextService:
     result = [seg for seg in combined_segments if not set(seg).issubset(punctuation)]
     
     return result
-  
-  def _detect_language(self, text: str) -> str:
-    # 使用第三方库进行语言检测
-    return "chinese"

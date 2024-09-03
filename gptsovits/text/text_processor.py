@@ -2,29 +2,30 @@ from typing import Tuple
 import torch
 from .chinese.normalizer import ChineseTextNormalizer
 from .chinese.phoneme_converter import ChinesePhonemeConverter
+from .english.phoneme_converter import EnglishPhonemeConverter
+from .english.normalizer import EnglishTextNormalizer
 from .normalizer import EmptyTextNormalizer
 from .symbols import get_symbols_dict
 
 class LanguageProcessor:
     def __init__(self, language: str):
-        if language == "chinese":
+        if language == "zh":
             self.phoneme_converter = ChinesePhonemeConverter()
             self.text_normalizer = ChineseTextNormalizer()
-        elif language == "english":
+        elif language == "en":
             self.phoneme_converter = EnglishPhonemeConverter()
             self.text_normalizer = EnglishTextNormalizer()
-        elif language == "japanese":
+        elif language == "ja":
             self.phoneme_converter = JapanesePhonemeConverter()
             self.text_normalizer = EmptyTextNormalizer()
-        elif language == "korean":
+        elif language == "ko":
             self.phoneme_converter = KoreanPhonemeConverter()
             self.text_normalizer = EmptyTextNormalizer()
-        elif language == "cantonese":
+        elif language == "yue":
             self.phoneme_converter = CantonesePhonemeConverter()
             self.text_normalizer = ChineseTextNormalizer()
         else:
             raise ValueError(f"Unsupported language: {language}")
-
 
     def process(self, text: str) -> Tuple[str, list[str], torch.Tensor]:
         normalized_text = self.text_normalizer.normalize_text(text)

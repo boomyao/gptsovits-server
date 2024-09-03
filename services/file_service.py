@@ -56,7 +56,7 @@ class FileService:
     def download_file(self, object_name, file_path):
         cache_path = os.path.join(self.cache_dir, object_name)
         if os.path.exists(cache_path):
-            self.logger.info(f"从缓存返回文件: {object_name}")
+            self.logger.debug(f"从缓存返回文件: {object_name}")
             shutil.copy(cache_path, file_path)
             return True
 

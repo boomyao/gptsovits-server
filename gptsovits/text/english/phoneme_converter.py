@@ -2,6 +2,7 @@ import os, re
 from wordsegment import load as wordsegment_load, segment as word_segment
 from nltk.tokenize import TweetTokenizer
 from nltk import pos_tag
+import nltk
 from g2p_en import G2p
 from gptsovits.text.constants import PUNCTUATION
 from gptsovits.text.symbols import get_symbols
@@ -17,6 +18,8 @@ class EnglishPhonemeConverter(PhonemeConverter):
         self.namedict = self._load_namedict()
         self._remove_invalid_entries()
         self._add_homograph_corrections()
+
+        nltk.download('averaged_perceptron_tagger_eng')
 
     def convert_to_phonemes(self, text: str):
         words = TweetTokenizer().tokenize(text)
@@ -38,8 +41,11 @@ class EnglishPhonemeConverter(PhonemeConverter):
         if cmu_dict is None:
             cmu_dict = self._read_cmu_dict(cmu_dict_path)
             cmu_dict.update(self._read_cmu_dict(cmu_fast_path, start_line=0))
-            cmu_dict.update(self._read_cmu_dict(cmu_hot_path, start_line=0))
             save_pickle(cmu_dict, cache_path)
+
+        # Load the hot dictionary
+        hot_dict = self._read_cmu_dict(cmu_hot_path, start_line=0)
+        cmu_dict.update(hot_dict)
 
         return cmu_dict
 
@@ -48,7 +54,7 @@ class EnglishPhonemeConverter(PhonemeConverter):
         with open(file_path) as f:
             lines = f.readlines()[start_line:]
             for line in lines:
-                word, phonemes = line.strip().split("  ", 1)
+                word, phonemes = line.strip().split(" ", 1)
                 cmu_dict[word.lower()] = [phonemes.split()]
         return cmu_dict
 

@@ -3,7 +3,21 @@ from gptsovits_manager import GPTSovitsManager
 from services.file_service import FileService
 import soundfile as sf
 import io
-import base64
+import os
+import logging
+import dotenv
+
+dotenv.load_dotenv()
+
+IS_DEBUG = os.getenv('IS_DEBUG', 'false').lower() == 'true'
+
+logging.basicConfig(level=logging.DEBUG if IS_DEBUG else logging.INFO)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('s3transfer').setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -37,7 +51,8 @@ def text_to_speech():
         return jsonify({'object_name': object_name})
 
     except Exception as e:
+        logger.error(e, exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6000)
+    app.run(host='0.0.0.0', port=6000, debug=IS_DEBUG)
