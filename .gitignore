@@ -7,3 +7,5 @@ __pycache__/
 /tmp/*
 
 .env
+
+/lib/nltk_data

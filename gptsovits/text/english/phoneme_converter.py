@@ -9,6 +9,8 @@ from gptsovits.text.symbols import get_symbols
 from gptsovits.text.phoneme_converter import PhonemeConverter
 from gptsovits.utils.pickle_utils import load_pickle, save_pickle
 
+nltk.data.path.append(os.environ.get("NLTK_DATA", "/home/nltk_data"))
+
 class EnglishPhonemeConverter(PhonemeConverter):
     def __init__(self):
         self.base_path = os.path.dirname(os.path.abspath(__file__))

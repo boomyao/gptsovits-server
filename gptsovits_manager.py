@@ -18,7 +18,7 @@ class GPTSovitsManager:
     
     def _check_and_free_memory(self):
         if torch.cuda.is_available():
-            current_memory = torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated()
+            current_memory = torch.cuda.memory_allocated() / torch.cuda.get_device_properties(0).total_memory
             if current_memory > self.memory_threshold:
                 self._free_memory()
     
@@ -26,4 +26,3 @@ class GPTSovitsManager:
         if self.cached_gptsovits:
             oldest_id = next(iter(self.cached_gptsovits))
             del self.cached_gptsovits[oldest_id]
-            torch.cuda.empty_cache()
