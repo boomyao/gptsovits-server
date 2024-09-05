@@ -20,6 +20,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 # 复制项目文件
 COPY . /app
+# 复制 nltk_data
+COPY ./lib/nltk_data /root/nltk_data
 
 # 暴露端口
 EXPOSE 6000
