@@ -9,7 +9,7 @@ class GPTSovitsModel:
     self.sovits = sovits
 
     self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    self.is_half = True if self.device == 'cuda' else False
+    self.is_half = self.device.type == 'cuda'
 
     self.top_k = 15
     self.top_p = 1
@@ -21,10 +21,11 @@ class GPTSovitsModel:
     self.gpt.load_state_dict(torch.load(gpt_path, map_location=self.device)['weight'])
     self.sovits.load_state_dict(torch.load(sovits_path, map_location=self.device)['weight'])
     if self.is_half:
-      self.gpt.half()
-      self.sovits.half()
-    self.gpt.to(self.device)
-    self.sovits.to(self.device)
+      self.gpt = self.gpt.half().to(self.device)
+      self.sovits = self.sovits.half().to(self.device)
+    else:
+      self.gpt = self.gpt.to(self.device)
+      self.sovits = self.sovits.to(self.device)
     self.gpt.eval()
     self.sovits.eval()
 

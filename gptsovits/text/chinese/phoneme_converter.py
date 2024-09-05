@@ -19,10 +19,16 @@ class ChinesePhonemeConverter(PhonemeConverter):
         super().__init__()
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.device = PhonemeConverter.device
+        self.dtype = PhonemeConverter.dtype
         bert_model_path = 'pretrained_models/chinese-roberta-wwm-ext-large'
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_path)
         self.bert_model = AutoModelForMaskedLM.from_pretrained(bert_model_path)
         self.tone_modifier = ToneSandhi()
+
+        if self.dtype == torch.float16:
+            self.bert_model = self.bert_model.half().to(self.device)
+        else:
+            self.bert_model = self.bert_model.to(self.device)
 
         self._loadErhuaDict()
     
