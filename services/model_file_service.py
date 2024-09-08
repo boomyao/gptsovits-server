@@ -2,6 +2,8 @@ import os, uuid
 import logging
 from .file_service import FileService
 
+REQUIRED_FILES = ['gpt.pth', 'sovits.pth', 'gptsovits.yaml']
+
 class ModelFileService:
     _instance = None
 
@@ -36,10 +38,9 @@ class ModelFileService:
         :return: 上传成功返回模型ID，失败返回None
         """
         model_id = str(uuid.uuid4())
-        required_files = ['gpt.ckpt', 'sovits.pth', 'gptsovits.yaml']
         model_dir = os.path.abspath(model_dir)
         
-        for file_name in required_files:
+        for file_name in REQUIRED_FILES:
             local_path = os.path.join(model_dir, file_name)
             if not os.path.exists(local_path):
                 self.logger.error(f"错误：{file_name} 不存在于指定目录中")
@@ -62,10 +63,9 @@ class ModelFileService:
         local_dir = f"pretrained_models/voices/{model_id}"
         os.makedirs(local_dir, exist_ok=True)
 
-        required_files = ['gpt.ckpt', 'sovits.pth', 'gptsovits.yaml']
         success = True
 
-        for file_name in required_files:
+        for file_name in REQUIRED_FILES:
             object_name = f"{self.model_dir}/{model_id}_{file_name}"
             local_path = os.path.join(local_dir, file_name)
             if not self.file_service.download_file(object_name, local_path):
@@ -83,10 +83,9 @@ class ModelFileService:
         :param model_id: 模型ID
         :return: 是否删除成功
         """
-        required_files = ['gpt.ckpt', 'sovits.pth', 'gptsovits.yaml']
         success = True
 
-        for file_name in required_files:
+        for file_name in REQUIRED_FILES:
             object_name = f"{self.model_dir}/{model_id}_{file_name}"
             if not self.file_service.delete_file(object_name):
                 print(f"错误：删除 {file_name} 失败")
@@ -114,10 +113,9 @@ class ModelFileService:
         :param expires_in: URL有效期（秒）
         :return: 模型文件URL字典
         """
-        required_files = ['gpt.ckpt', 'sovits.pth', 'gptsovits.yaml']
         urls = {}
 
-        for file_name in required_files:
+        for file_name in REQUIRED_FILES:
             object_name = f"{self.model_dir}/{model_id}_{file_name}"
             url = self.file_service.get_file_url(object_name, expires_in)
             if url:

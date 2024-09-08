@@ -18,8 +18,8 @@ class GPTSovitsModel:
     self.max_sec = 54
 
   def load(self, gpt_path, sovits_path):
-    self.gpt.load_state_dict(torch.load(gpt_path, map_location=self.device)['weight'])
-    self.sovits.load_state_dict(torch.load(sovits_path, map_location=self.device)['weight'])
+    self.gpt.load_state_dict(torch.load(gpt_path, map_location=self.device))
+    self.sovits.load_state_dict(torch.load(sovits_path, map_location=self.device))
     if self.is_half:
       self.gpt = self.gpt.half().to(self.device)
       self.sovits = self.sovits.half().to(self.device)

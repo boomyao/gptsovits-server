@@ -1,3 +1,7 @@
+/build
+/dist
+
+
 /pretrained_models/*
 
 .DS_Store

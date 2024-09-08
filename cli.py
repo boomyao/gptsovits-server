@@ -1,15 +1,30 @@
-from gptsovits.index import GPTSovits
-from gptsovits.text.symbols import get_symbols
-from dotenv import load_dotenv
+import typeguard
+typeguard.typechecked = lambda x: x
 
-load_dotenv()
+from gptsovits_manager import GPTSovitsManager
+import argparse
+import soundfile as sf
+import uuid
+
+TMP_DIR = '/tmp'
+
+mgr = GPTSovitsManager()
 
 if __name__ == '__main__':
-  from services.model_file_service import ModelFileService
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--model_id', type=str, required=True)
+  parser.add_argument('--text', type=str, required=True)
+  parser.add_argument('--ref_audio_id', type=str, required=True)
+  args = parser.parse_args()
 
-  modelFileService = ModelFileService.get_instance()
+  model_id = args.model_id
+  text = args.text
+  ref_audio_id = args.ref_audio_id
 
-  # modelFileService.upload_model('./pretrained_models/voices/001')
-  # modelFileService.download_model('80ffe8c8-a205-49b5-a745-470e1e47c02f')
-  # modelFileService.upload_presets('80ffe8c8-a205-49b5-a745-470e1e47c02f', './pretrained_models/voices/001/presets')
-  modelFileService.download_presets('80ffe8c8-a205-49b5-a745-470e1e47c02f')
+  gptsovits = mgr.get(model_id)
+  audio = gptsovits.inference(text, ref_audio_id)
+
+  file_name = f'{TMP_DIR}/{str(uuid.uuid4())}.wav'
+  sf.write(file_name, audio, 32000, format='wav')
+
+  print(file_name)

@@ -14,6 +14,12 @@ if __name__ == '__main__':
 
   modelFileService = ModelFileService.get_instance()
 
+  print('开始上传模型')
   id = modelFileService.upload_model(model_dir)
+  if id is None:
+    print('模型上传失败')
+    exit(1)
+
+  print('开始上传预设')
   modelFileService.upload_presets(id, '{}/presets'.format(model_dir))
   print(f'模型上传成功，ID为：{id}')

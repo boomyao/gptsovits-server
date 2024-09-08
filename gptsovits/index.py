@@ -27,7 +27,7 @@ class GPTSovits:
             configs = load_hyperpyyaml(f)
 
         self.model = GPTSovitsModel(configs['gpt'], configs['sovits'])
-        self.model.load('{}/gpt.ckpt'.format(model_dir), '{}/sovits.pth'.format(model_dir))
+        self.model.load('{}/gpt.pth'.format(model_dir), '{}/sovits.pth'.format(model_dir))
 
         self.frontend = GPTSovitsFrontend()
 
