@@ -30,6 +30,9 @@ mgr = GPTSovitsManager()
 
 TMP_DIR = f'tmp'
 
+if not os.path.exists(TMP_DIR):
+    os.makedirs(TMP_DIR)
+
 @app.route('/static/tmp/<name>', methods=['GET'])
 def serve_tmp_static(name):
     print(f'serve_tmp_static: {name}')
@@ -73,18 +76,11 @@ def get_voice_dl_state(data):
     state = mgr.get_download_state(ids)
     return state
 
-serve_state = None
-@socketio.on('connect')
-def on_connect():
-    global serve_state
-    if serve_state is None:
-        serve_state = 'Downloading'
-        emit('state', {'state': serve_state}, broadcast=True)
-        mgr.load_shared_models()
-        serve_state = 'Done'
-        emit('state', {'state': serve_state}, broadcast=True)
-    else:
-        emit('state', {'state': serve_state}, broadcast=True)
+@socketio.on('load_base_models')
+def load_base_models(data):
+    mgr.load_shared_models()
+    return {'success': True}
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=55001, allow_unsafe_werkzeug=True)
