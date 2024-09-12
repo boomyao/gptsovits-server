@@ -4,8 +4,9 @@ import os
 import requests
 from tqdm import tqdm
 import concurrent.futures
+from gptsovits.contant import relative_base_path
 
-VOICE_BASE_DIR = 'pretrained_models/voices'
+VOICE_BASE_DIR = relative_base_path('voices')
 
 class GPTSovitsManager:
     def __init__(self, memory_threshold=0.9):
@@ -34,7 +35,7 @@ class GPTSovitsManager:
     
     def load_shared_models(self):
         prefix = 'https://modelscope.cn/models/boomyao/easyvoice/resolve/master'
-        base_dir = 'pretrained_models'
+        base_dir = relative_base_path()
         files = [
             'gptsovits/chinese-hubert-base/config.json',
             'gptsovits/chinese-hubert-base/preprocessor_config.json',

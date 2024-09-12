@@ -1,22 +1,16 @@
-import nltk
-nltk.data.path = ['pretrained_models/nltk']
+import os
+from gptsovits.contant import relative_base_path
+os.environ['NLTK_DATA'] = relative_base_path('nltk')
 from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel
 import numpy as np
-from services.model_file_service import ModelFileService
-
-def download_model(id: str) -> str:
-    model_file_service = ModelFileService.get_instance()
-    model_file_service.download_model(id)
-    model_file_service.download_presets(id)
-    return 'pretrained_models/voices/{}'.format(id)
 
 class GPTSovits:
     def __init__(self, id: str):
         self.id = id
 
-        self.model_dir = f"pretrained_models/voices/{self.id}"
+        self.model_dir = f"{relative_base_path('voices')}/{self.id}"
 
     def load(self):
         model_dir = self.model_dir

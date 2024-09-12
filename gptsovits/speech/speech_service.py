@@ -3,6 +3,7 @@ from .feature_extractor import cnhubert
 import numpy as np
 from gptsovits.module.mel_processing import spectrogram_torch
 from .constants import FILTER_LENGTH, HOP_LENGTH, WIN_LENGTH, SAMPLE_RATE
+from gptsovits.contant import relative_base_path
 
 class SpeechService:
   def __init__(self, device='cuda', dtype=torch.float32):
@@ -11,7 +12,7 @@ class SpeechService:
 
     self.is_half = dtype == torch.float16
 
-    cnhubert_base_path = "pretrained_models/gptsovits/chinese-hubert-base"
+    cnhubert_base_path = relative_base_path('gptsovits/chinese-hubert-base')
 
     cnhubert.cnhubert_base_path = cnhubert_base_path
 
