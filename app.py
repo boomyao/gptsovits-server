@@ -1,13 +1,16 @@
-from flask import Flask, request, jsonify
-from gptsovits_manager import GPTSovitsManager
-from services.file_service import FileService
-import soundfile as sf
-import io
 import os
-import logging
-import dotenv
+import typeguard
+typeguard.typechecked = lambda f: f
 
-dotenv.load_dotenv()
+from flask import Flask, send_from_directory
+from flask_socketio import SocketIO, emit
+from services.model_file_service import ModelFileService
+from gptsovits_manager import GPTSovitsManager
+import soundfile as sf
+import logging
+import uuid
+# import dotenv
+# dotenv.load_dotenv()
 
 IS_DEBUG = os.getenv('IS_DEBUG', 'false').lower() == 'true'
 
@@ -20,39 +23,68 @@ logging.getLogger('s3transfer').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 初始化GPTSovitsManager
 mgr = GPTSovitsManager()
-file_service = FileService.get_instance()
 
-@app.route('/tts', methods=['POST'])
-def text_to_speech():
-    data = request.json
+TMP_DIR = f'tmp'
+
+@app.route('/static/tmp/<name>', methods=['GET'])
+def serve_tmp_static(name):
+    print(f'serve_tmp_static: {name}')
+    return send_from_directory(TMP_DIR, name)
+
+@socketio.on('tts')
+def text_to_speech(data):
     if not data or 'text' not in data or 'model_id' not in data or 'ref_audio_id' not in data:
-        return jsonify({'error': '缺少必要的参数'}), 400
+        return {'error': '缺少必要的参数'}
 
     text = data['text']
     model_id = data['model_id']
     ref_audio_id = data['ref_audio_id']
 
     try:
-        # 获取模型实例
         gptsovits = mgr.get(model_id)
-
-        # 执行推理
         audio = gptsovits.inference(text, ref_audio_id)
 
-        # 将音频数据转换为字节流
-        audio_bytes = io.BytesIO()
-        sf.write(audio_bytes, audio, 32000, format='wav')
+        object_name = f'{TMP_DIR}/{str(uuid.uuid4())}.wav'
+        sf.write(object_name, audio, 32000, format='wav')
 
-        object_name = file_service.upload_tmp_file(audio_bytes, ext='wav')
-
-        return jsonify({'object_name': object_name})
+        return {'object_name': object_name}
 
     except Exception as e:
         logger.error(e, exc_info=True)
-        return jsonify({'error': str(e)}), 500
+        return {'error': str(e)}
+
+@socketio.on('download_voice')
+def download_voice(data):
+    try:
+        model_file_service = ModelFileService.get_instance()
+        model_file_service.download_model_with_config(data)
+        return {'success': True}
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        return {'error': str(e)}
+
+@socketio.on('get_download_voice_state')
+def get_voice_dl_state(data):
+    ids = data['ids']
+    state = mgr.get_download_state(ids)
+    return state
+
+serve_state = None
+@socketio.on('connect')
+def on_connect():
+    global serve_state
+    if serve_state is None:
+        serve_state = 'Downloading'
+        emit('state', {'state': serve_state}, broadcast=True)
+        mgr.load_shared_models()
+        serve_state = 'Done'
+        emit('state', {'state': serve_state}, broadcast=True)
+    else:
+        emit('state', {'state': serve_state}, broadcast=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6000, debug=IS_DEBUG)
+    socketio.run(app, host='0.0.0.0', port=55001, allow_unsafe_werkzeug=True)

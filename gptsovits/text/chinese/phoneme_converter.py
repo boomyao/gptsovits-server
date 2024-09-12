@@ -20,7 +20,7 @@ class ChinesePhonemeConverter(PhonemeConverter):
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.device = PhonemeConverter.device
         self.dtype = PhonemeConverter.dtype
-        bert_model_path = 'pretrained_models/chinese-roberta-wwm-ext-large'
+        bert_model_path = 'pretrained_models/gptsovits/chinese-roberta-wwm-ext-large'
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_path)
         self.bert_model = AutoModelForMaskedLM.from_pretrained(bert_model_path)
         self.tone_modifier = ToneSandhi()

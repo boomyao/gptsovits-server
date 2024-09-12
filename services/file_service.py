@@ -88,7 +88,7 @@ class FileService:
             files = [obj['Key'] for obj in response.get('Contents', [])]
             return files
         except Exception as e:
-            self.logger.error(f"列出文件时出错: {e}")
+            self.logger.error(f"列出文件时出错: {e}", exc_info=True)
             return []
 
     def get_file_url(self, object_name, expires_in=3600):

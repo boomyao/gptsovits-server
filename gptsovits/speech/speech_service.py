@@ -11,7 +11,7 @@ class SpeechService:
 
     self.is_half = dtype == torch.float16
 
-    cnhubert_base_path = "pretrained_models/chinese-hubert-base"
+    cnhubert_base_path = "pretrained_models/gptsovits/chinese-hubert-base"
 
     cnhubert.cnhubert_base_path = cnhubert_base_path
 

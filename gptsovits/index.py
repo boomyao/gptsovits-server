@@ -2,9 +2,8 @@ from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel
 import numpy as np
-from huggingface_hub import snapshot_download
 from services.model_file_service import ModelFileService
-import os
+
 def download_model(id: str) -> str:
     model_file_service = ModelFileService.get_instance()
     model_file_service.download_model(id)
@@ -15,11 +14,7 @@ class GPTSovits:
     def __init__(self, id: str):
         self.id = id
 
-        self.shared_model = GPTSovits.load_shared_models()
-
-        model_dir = download_model(self.id)
-
-        self.model_dir = model_dir  
+        self.model_dir = f"pretrained_models/voices/{self.id}"
 
     def load(self):
         model_dir = self.model_dir
@@ -52,8 +47,3 @@ class GPTSovits:
             ref_audio = f.read()
         return ref_audio, ref_prompt
 
-
-    @staticmethod
-    def load_shared_models():
-        if not os.path.exists('pretrained_models'):
-            snapshot_download(repo_id="boomyao/gptsovits", local_dir="pretrained_models")
