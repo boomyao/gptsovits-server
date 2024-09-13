@@ -1,3 +1,5 @@
+import nltk
+nltk.data.path = ['pretrained_models/nltk']
 from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel

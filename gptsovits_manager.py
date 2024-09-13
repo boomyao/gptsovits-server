@@ -33,36 +33,51 @@ class GPTSovitsManager:
         return result
     
     def load_shared_models(self):
-        prefix = 'https://modelscope.cn/models/boomyao/easyvoice/resolve/master/gptsovits'
-        base_dir = 'pretrained_models/gptsovits'
+        prefix = 'https://modelscope.cn/models/boomyao/easyvoice/resolve/master'
+        base_dir = 'pretrained_models'
         files = [
-            'chinese-hubert-base/config.json',
-            'chinese-hubert-base/preprocessor_config.json',
-            'chinese-hubert-base/pytorch_model.bin',
-            'chinese-roberta-wwm-ext-large/config.json',
-            'chinese-roberta-wwm-ext-large/pytorch_model.bin',
-            'chinese-roberta-wwm-ext-large/tokenizer.json'
+            'gptsovits/chinese-hubert-base/config.json',
+            'gptsovits/chinese-hubert-base/preprocessor_config.json',
+            'gptsovits/chinese-hubert-base/pytorch_model.bin',
+            'gptsovits/chinese-roberta-wwm-ext-large/config.json',
+            'gptsovits/chinese-roberta-wwm-ext-large/pytorch_model.bin',
+            'gptsovits/chinese-roberta-wwm-ext-large/tokenizer.json',
+            'nltk/corpora/cmudict/cmudict',
+            'nltk/taggers/averaged_perceptron_tagger/averaged_perceptron_tagger.pickle',
+            'nltk/taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.classes.json',
+            'nltk/taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.tagdict.json',
+            'nltk/taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.weights.json',
         ]
 
-        def download_file(file):
+        def download_file(file, max_retries=3):
             output_file = os.path.join(base_dir, file)
             if not os.path.exists(output_file):
                 os.makedirs(os.path.dirname(output_file), exist_ok=True)
-                response = requests.get(f'{prefix}/{file}', stream=True)
-                if response.status_code == 200:
-                    total_size = int(response.headers.get('content-length', 0))
-                    with open(output_file, 'wb') as f, tqdm(
-                        desc=file,
-                        total=total_size,
-                        unit='iB',
-                        unit_scale=True,
-                        unit_divisor=1024,
-                    ) as progress_bar:
-                        for data in response.iter_content(chunk_size=1024):
-                            size = f.write(data)
-                            progress_bar.update(size)
-                return file, True
-            return file, False
+                for attempt in range(max_retries):
+                    try:
+                        response = requests.get(f'{prefix}/{file}', stream=True)
+                        response.raise_for_status()  # 如果请求失败，将引发异常
+                        total_size = int(response.headers.get('content-length', 0))
+                        with open(output_file, 'wb') as f, tqdm(
+                            desc=file,
+                            total=total_size,
+                            unit='iB',
+                            unit_scale=True,
+                            unit_divisor=1024,
+                        ) as progress_bar:
+                            for data in response.iter_content(chunk_size=1024):
+                                size = f.write(data)
+                                progress_bar.update(size)
+                        return file, True
+                    except (requests.RequestException, IOError) as e:
+                        print(f"下载 {file} 时发生错误 (尝试 {attempt + 1}/{max_retries}): {str(e)}")
+                        if attempt == max_retries - 1:
+                            print(f"下载 {file} 失败，已达到最大重试次数")
+                            return file, False
+                        else:
+                            print("正在重试...")
+            else:
+                return file, False
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
             future_to_file = {executor.submit(download_file, file): file for file in files}
