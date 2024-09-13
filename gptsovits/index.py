@@ -1,6 +1,6 @@
-import os
 from gptsovits.contant import relative_base_path
-os.environ['NLTK_DATA'] = relative_base_path('nltk')
+import nltk
+nltk.data.path.append(relative_base_path('nltk'))
 from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel

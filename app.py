@@ -9,8 +9,7 @@ from gptsovits_manager import GPTSovitsManager
 import soundfile as sf
 import logging
 import uuid
-# import dotenv
-# dotenv.load_dotenv()
+from gptsovits.contant import relative_base_path
 
 IS_DEBUG = os.getenv('IS_DEBUG', 'false').lower() == 'true'
 
@@ -28,15 +27,16 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # 初始化GPTSovitsManager
 mgr = GPTSovitsManager()
 
-TMP_DIR = f'tmp'
+TMP_PATH = 'tmp'
+TMP_ROOT_DIR = relative_base_path(TMP_PATH)
 
-if not os.path.exists(TMP_DIR):
-    os.makedirs(TMP_DIR)
+if not os.path.exists(TMP_ROOT_DIR):
+    os.makedirs(TMP_ROOT_DIR)
 
 @app.route('/static/tmp/<name>', methods=['GET'])
 def serve_tmp_static(name):
     print(f'serve_tmp_static: {name}')
-    return send_from_directory(TMP_DIR, name)
+    return send_from_directory(TMP_ROOT_DIR, name)
 
 @socketio.on('tts')
 def text_to_speech(data):
@@ -51,8 +51,8 @@ def text_to_speech(data):
         gptsovits = mgr.get(model_id)
         audio = gptsovits.inference(text, ref_audio_id)
 
-        object_name = f'{TMP_DIR}/{str(uuid.uuid4())}.wav'
-        sf.write(object_name, audio, 32000, format='wav')
+        object_name = f'{TMP_PATH}/{str(uuid.uuid4())}.wav'
+        sf.write(relative_base_path(object_name), audio, 32000, format='wav')
 
         return {'object_name': object_name}
 
