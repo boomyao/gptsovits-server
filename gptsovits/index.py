@@ -18,7 +18,7 @@ class GPTSovits:
 
     def load(self):
         model_dir = self.model_dir
-        with open('{}/gptsovits.yaml'.format(model_dir), 'r') as f:
+        with open('{}/gptsovits.yaml'.format(model_dir), 'r', encoding='utf-8') as f:
             configs = load_hyperpyyaml(f)
 
         self.model = GPTSovitsModel(configs['gpt'], configs['sovits'])
@@ -41,7 +41,7 @@ class GPTSovits:
 
     def load_reference(self, ref_id: str):
         presets_dir = '{}/presets'.format(self.model_dir)
-        with open('{}/{}.txt'.format(presets_dir, ref_id), 'r') as f:
+        with open('{}/{}.txt'.format(presets_dir, ref_id), 'r', encoding='utf-8') as f:
             ref_prompt = f.read()
         with open('{}/{}.wav'.format(presets_dir, ref_id), 'rb') as f:
             ref_audio = f.read()
