@@ -6,10 +6,12 @@ from flask import Flask, send_from_directory
 from flask_socketio import SocketIO, emit
 from services.model_file_service import ModelFileService
 from gptsovits_manager import GPTSovitsManager
+from flask_cors import CORS
 import soundfile as sf
 import logging
 import uuid
-from gptsovits.contant import relative_base_path
+import shutil
+from gptsovits.contant import relative_base_path, pretrained_models_base_path
 
 IS_DEBUG = os.getenv('IS_DEBUG', 'false').lower() == 'true'
 
@@ -22,6 +24,7 @@ logging.getLogger('s3transfer').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 初始化GPTSovitsManager
@@ -29,9 +32,10 @@ mgr = GPTSovitsManager()
 
 TMP_PATH = 'tmp'
 TMP_ROOT_DIR = relative_base_path(TMP_PATH)
-
-if not os.path.exists(TMP_ROOT_DIR):
-    os.makedirs(TMP_ROOT_DIR)
+if os.path.exists(pretrained_models_base_path(TMP_PATH)):
+    shutil.move(pretrained_models_base_path(TMP_PATH), TMP_ROOT_DIR)
+else:
+    os.makedirs(TMP_ROOT_DIR, exist_ok=True)
 
 @app.route('/static/tmp/<name>', methods=['GET'])
 def serve_tmp_static(name):

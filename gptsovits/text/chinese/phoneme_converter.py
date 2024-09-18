@@ -7,7 +7,7 @@ import jieba_fast.posseg as psg
 from pypinyin import Style, lazy_pinyin
 from pypinyin.contrib.tone_convert import to_initials, to_finals_tone3
 from .tone_sandhi import ToneSandhi
-from gptsovits.contant import relative_base_path
+from gptsovits.contant import pretrained_models_base_path
 
 current_file_path = os.path.dirname(__file__)
 pinyin_to_symbol_map = {
@@ -21,7 +21,7 @@ class ChinesePhonemeConverter(PhonemeConverter):
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.device = PhonemeConverter.device
         self.dtype = PhonemeConverter.dtype
-        bert_model_path = relative_base_path('gptsovits/chinese-roberta-wwm-ext-large')
+        bert_model_path = pretrained_models_base_path('gptsovits/chinese-roberta-wwm-ext-large')
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_path)
         self.bert_model = AutoModelForMaskedLM.from_pretrained(bert_model_path)
         self.tone_modifier = ToneSandhi()

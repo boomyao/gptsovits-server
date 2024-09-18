@@ -1,6 +1,6 @@
-from gptsovits.contant import relative_base_path
+from gptsovits.contant import pretrained_models_base_path
 import nltk
-nltk.data.path.append(relative_base_path('nltk'))
+nltk.data.path.append(pretrained_models_base_path('nltk'))
 from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel
@@ -10,7 +10,7 @@ class GPTSovits:
     def __init__(self, id: str):
         self.id = id
 
-        self.model_dir = f"{relative_base_path('voices')}/{self.id}"
+        self.model_dir = f"{pretrained_models_base_path('voices')}/{self.id}"
 
     def load(self):
         model_dir = self.model_dir

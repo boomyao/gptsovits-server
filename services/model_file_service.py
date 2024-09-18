@@ -3,7 +3,7 @@ import logging
 # from .file_service import FileService
 import requests
 import concurrent.futures
-from gptsovits.contant import relative_base_path
+from gptsovits.contant import pretrained_models_base_path
 
 REQUIRED_FILES = ['gpt.pth', 'sovits.pth', 'gptsovits.yaml']
 
@@ -38,7 +38,7 @@ class ModelFileService:
         fileUrls = config['fileUrls']
 
         def download_file(file_path, url):
-            local_path = os.path.join(relative_base_path(), file_path)
+            local_path = os.path.join(pretrained_models_base_path(), file_path)
             if not os.path.exists(local_path):
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 response = requests.get(url)
