@@ -22,11 +22,15 @@ class GPTSovits:
 
         self.frontend = GPTSovitsFrontend()
 
-    def inference(self, text: str, ref_id: str, speed = 1):
-        ref_audio, ref_prompt = self.load_reference(ref_id)
+    def inference(self, text: str, ref_id = None, ref_audio = None, ref_prompt = None, speed = 1, extra_audios = None, extra_ref_ids = None):
+        if ref_id:
+            ref_audio, ref_prompt = self.load_reference(ref_id)
+
+        if extra_ref_ids:
+            extra_audios = [self.load_reference(ref_id)[0] for ref_id in extra_ref_ids]
         
         tts_speeches = []
-        generator = self.frontend.zero_shot(text, ref_audio, ref_prompt, speed)
+        generator = self.frontend.zero_shot(text, ref_audio, ref_prompt, speed, extra_audios=extra_audios)
         for model_input in generator:
             model_output = self.model.inference(**model_input)
             tts_speeches.append(model_output)

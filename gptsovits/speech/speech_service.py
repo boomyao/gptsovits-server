@@ -1,3 +1,4 @@
+from typing import List
 import torch, io, librosa
 from .feature_extractor import cnhubert
 import numpy as np
@@ -19,9 +20,12 @@ class SpeechService:
     ssl_model = cnhubert.get_model()
     self.ssl_model = ssl_model.half().to(device) if self.is_half else ssl_model.to(device)
 
-  def process_audio(self, audio: bytes, ref_prompt = None):
+  def process_audio(self, audio: bytes, ref_prompt = None, ex_audios: List[bytes] = None):
     ref_features = self._get_ref_features(audio) if ref_prompt else None
-    mel_specs = self._get_mel_specs(audio)
+    mel_specs = [self._get_mel_specs(audio)]
+    if ex_audios:
+      for ex_audio in ex_audios:
+        mel_specs.append(self._get_mel_specs(ex_audio))
     return ref_features, mel_specs
   
   def _get_ref_features(self, ref_audio: bytes):
@@ -62,7 +66,7 @@ class SpeechService:
         WIN_LENGTH,
         center=False,
     )
-    return [spec.to(self.dtype).to(self.device)]
+    return spec.to(self.dtype).to(self.device)
 
   def get_zero_wav(self, sr=32000):
     is_half = self.is_half

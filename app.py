@@ -1,8 +1,8 @@
-import os
+import os, io
 import typeguard
 typeguard.typechecked = lambda f: f
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, Response
 from flask_socketio import SocketIO, emit
 from services.model_file_service import ModelFileService
 from gptsovits_manager import GPTSovitsManager
@@ -42,6 +42,25 @@ def serve_tmp_static(name):
     print(f'serve_tmp_static: {name}')
     return send_from_directory(TMP_ROOT_DIR, name)
 
+@app.route('/tts', methods=['POST'])
+def tts():
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        model_id = data.get('model_id')
+        ref_id = data.get('ref_id')
+        extra_ref_ids = data.get('extra_ref_ids') or []
+        gptsovits = mgr.get(model_id)
+        audio = gptsovits.inference(text, ref_id=ref_id, extra_ref_ids=extra_ref_ids)   
+
+        wav_io = io.BytesIO()
+        sf.write(wav_io, audio, 32000, format='wav')
+
+        return Response(wav_io.getvalue(), content_type='audio/wav')
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        return Response(status=500, response=str(e))
+
 @socketio.on('tts')
 def text_to_speech(data):
     if not data or 'text' not in data or 'model_id' not in data or 'ref_audio_id' not in data:
@@ -49,11 +68,11 @@ def text_to_speech(data):
 
     text = data['text']
     model_id = data['model_id']
-    ref_audio_id = data['ref_audio_id']
-
+    ref_audio = data['ref_audio']
+    ref_prompt = data['ref_prompt']
     try:
         gptsovits = mgr.get(model_id)
-        audio = gptsovits.inference(text, ref_audio_id)
+        audio = gptsovits.inference(text, ref_audio, ref_prompt)
 
         object_name = f'{TMP_PATH}/{str(uuid.uuid4())}.wav'
         sf.write(relative_base_path(object_name), audio, 32000, format='wav')
@@ -87,4 +106,4 @@ def load_base_models(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=55001, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=55001, allow_unsafe_werkzeug=True, debug=IS_DEBUG)

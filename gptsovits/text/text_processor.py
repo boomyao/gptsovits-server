@@ -31,9 +31,21 @@ class LanguageProcessor:
         normalized_text = self.text_normalizer.normalize_text(text)
         phonemes, phoneme_lengths = self.phoneme_converter.convert_to_phonemes(normalized_text)
         bert_features = self.phoneme_converter.get_bert_features(normalized_text, phonemes, phoneme_lengths)
-        symbols_dict = get_symbols_dict()
-        phonemes = [symbols_dict[phoneme] for phoneme in phonemes]
+        phonemes = self.phonemes_to_seq(phonemes)
         return normalized_text, phonemes, bert_features
+    
+    def phonemes_to_seq(self, phonemes: list[str]) -> list[int]:
+        rep_map = {"'": "-"}
+        symbols_dict = get_symbols_dict()
+        seq = []
+        for phoneme in phonemes:
+            if phoneme in symbols_dict:
+                seq.append(symbols_dict[phoneme])
+            elif phoneme in rep_map:
+                seq.append(symbols_dict[rep_map[phoneme]])
+            else:
+                print(f"Warning: '{phoneme}' not found in symbols_dict")
+        return seq
 
 class LanguageProcessorFactory:
     _processor_cache = {}

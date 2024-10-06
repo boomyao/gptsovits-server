@@ -11,6 +11,17 @@ def replace_consecutive_punctuation(text):
 
 class EnglishTextNormalizer(TextNormalizer):
     def normalize_text(self, text: str) -> str:
+
+        rep_map = {
+            "[;:：，；]": ",",
+            '["’]': "'",
+            "。": ".",
+            "！": "!",
+            "？": "?",
+        }
+        for p, r in rep_map.items():
+            text = re.sub(p, r, text)
+        
         text = normalize_numbers(unicode(text))
         text = ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
         text = re.sub("[^ A-Za-z'.,?!\-]", "", text)

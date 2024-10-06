@@ -10,11 +10,11 @@ class GPTSovitsFrontend:
         self.text_service = TextService(device=self.device, dtype=self.dtype)
         self.speech_service = SpeechService(device=self.device, dtype=self.dtype)
 
-    def zero_shot(self, text: str, ref_audio, ref_prompt = None, speed = 1):
+    def zero_shot(self, text: str, ref_audio, ref_prompt = None, speed = 1, extra_audios: List[bytes] = None):
         texts = self.text_service.split_paragraph(text)
         text_inputs = self.text_service.process_text_batch(texts)
         ref_prompt_input = self.text_service.process_text(ref_prompt) if ref_prompt else None
-        ref_features, ref_mel_specs = self.speech_service.process_audio(ref_audio, ref_prompt)
+        ref_features, ref_mel_specs = self.speech_service.process_audio(ref_audio, ref_prompt, extra_audios)
         
         for text_input in text_inputs:
             bert_features = text_input[2] if not ref_prompt_input else torch.cat([ref_prompt_input[2], text_input[2]], 1)

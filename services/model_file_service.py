@@ -62,3 +62,11 @@ class ModelFileService:
 
         return True
 
+    def download_model(self, model_id):
+        from .file_service import FileService
+        file_service = FileService.get_instance()
+        files = file_service.list_files(f'voices/{model_id}')
+        os.makedirs(relative_base_path(f'voices/{model_id}'), exist_ok=True)
+        os.makedirs(relative_base_path(f'voices/{model_id}/presets'), exist_ok=True)
+        for file in files:
+            file_service.download_file(file, relative_base_path(file))

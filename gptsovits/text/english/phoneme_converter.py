@@ -2,9 +2,7 @@ import os, re
 from wordsegment import load as wordsegment_load, segment as word_segment
 from nltk.tokenize import TweetTokenizer
 from nltk import pos_tag
-import nltk
 from g2p_en import G2p
-from gptsovits.text.constants import PUNCTUATION
 from gptsovits.text.symbols import get_symbols
 from gptsovits.text.phoneme_converter import PhonemeConverter
 from gptsovits.utils.pickle_utils import load_pickle, save_pickle
@@ -22,7 +20,11 @@ class EnglishPhonemeConverter(PhonemeConverter):
     def convert_to_phonemes(self, text: str):
         words = TweetTokenizer().tokenize(text)
         tokens = pos_tag(words)
-        prons = [pron for o_word, pos in tokens for pron in self._get_pronunciation(o_word, pos)]
+        prons = []
+        for o_word, pos in tokens:
+            prons.extend(self._get_pronunciation(o_word, pos))
+            prons.extend([" "])
+        prons = prons[:-1]
 
         phonemes = self._process_phonemes(prons, get_symbols())
         return phonemes, []
@@ -76,26 +78,56 @@ class EnglishPhonemeConverter(PhonemeConverter):
         if not re.search("[a-z]", word):
             return [word]
         if len(word) == 1:
-            return ['EY1'] if o_word == "A" else self.cmu.get(word, [["UNK"]])[0]
+            return ['EY1'] if o_word == "A" else self.cmu[word][0]
         if word in self.g2p_model.homograph2features:
             return self._resolve_homograph(word, pos)
-        if word in self.cmu:
+        else:
+            return self._qryword(o_word)
+
+    def _qryword(self, o_word):
+        word = o_word.lower()
+
+        # 查字典, 单字母除外
+        if len(word) > 1 and word in self.cmu:  # lookup CMU dict
             return self.cmu[word][0]
+
+        # 单词仅首字母大写时查找姓名字典
         if o_word.istitle() and word in self.namedict:
             return self.namedict[word][0]
-        if len(word) <= 3:
-            return [phone for w in word for phone in self.cmu.get(w, [["UNK"]])[0]]
-        if re.match(r"^([a-z]+)('s)$", word):
-            return self._handle_possessive(word[:-2], word[-2:])
 
-        return [phone for comp in word_segment(word) for phone in self._get_pronunciation(comp, pos)]
+        # oov 长度小于等于 3 直接读字母
+        if len(word) <= 3:
+            phones = []
+            for w in word:
+                # 单读 A 发音修正, 此处不存在大写的情况
+                if w == "a":
+                    phones.extend(['EY1'])
+                elif not w.isalpha():
+                    phones.extend([w])
+                else:
+                    phones.extend(self.cmu[w][0])
+            return phones
+
+        # 尝试分离所有格
+        if re.match(r"^([a-z]+)('s)$", word):
+            return self._handle_possessive(word)
+
+        # 尝试进行分词，应对复合词
+        comps = word_segment(word.lower())
+
+        # 无法分词的送回去预测
+        if len(comps)==1:
+            return self.g2p_model.predict(word)
+
+        # 可以分词的递归处理
+        return [phone for comp in comps for phone in self._qryword(comp)]
 
     def _resolve_homograph(self, word, pos):
         pron1, pron2, pos1 = self.g2p_model.homograph2features[word]
         return pron1 if pos.startswith(pos1) else pron2
 
     def _handle_possessive(self, root_word):
-        phones = self._get_pronunciation(root_word, None)
+        phones = self._qryword(root_word)
         if phones[-1] in ['P', 'T', 'K', 'F', 'TH', 'HH']:
             return phones + ['S']
         elif phones[-1] in ['S', 'Z', 'SH', 'ZH', 'CH', 'JH']:
