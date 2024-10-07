@@ -1,5 +1,7 @@
 from typing import Tuple
 import torch
+
+from gptsovits.text.korean.phoneme_converter import KoreanPhonemeConverter
 from .chinese.normalizer import ChineseTextNormalizer
 from .chinese.phoneme_converter import ChinesePhonemeConverter
 from .english.phoneme_converter import EnglishPhonemeConverter

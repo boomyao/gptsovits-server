@@ -1,5 +1,6 @@
 from typing import List
 import logging
+import re
 import torch
 from .text_processor import LanguageProcessorFactory
 from .phoneme_converter import PhonemeConverter
@@ -18,6 +19,11 @@ class TextService:
     LangSegment.setfilters(["zh","ja","en","ko"])
 
   def process_text(self, text: str, language = None):
+    # preprocess number in chinese text
+    if re.search(r'[\u4e00-\u9fff]', text):
+      from .chinese.zh_normalization.text_normlization import TextNormalizer
+      text = TextNormalizer().normalize_sentence(text)
+
     segments = []
     for item in LangSegment.getTexts(text):
       segments.append(item)
