@@ -80,5 +80,16 @@ class TextService:
     
     # Remove segments that only contain punctuation
     result = [seg for seg in combined_segments if not set(seg).issubset(punctuation)]
+
+    logger.debug('splited segments: %s', result)
+
+    paragraphs = []
+    for segment in result:
+      lines = segment.split("\n")
+      for line in lines:
+        if line.strip():
+          paragraphs.append(line)
     
-    return result
+    logger.debug('splited paragraphs: %s', paragraphs)
+    
+    return paragraphs

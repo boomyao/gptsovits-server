@@ -1,5 +1,6 @@
 from typing import Tuple
 import torch
+import logging
 
 from gptsovits.text.korean.phoneme_converter import KoreanPhonemeConverter
 from .chinese.normalizer import ChineseTextNormalizer
@@ -8,6 +9,8 @@ from .english.phoneme_converter import EnglishPhonemeConverter
 from .english.normalizer import EnglishTextNormalizer
 from .normalizer import EmptyTextNormalizer
 from .symbols import get_symbols_dict
+
+logger = logging.getLogger(__name__)
 
 class LanguageProcessor:
     def __init__(self, language: str):
@@ -31,9 +34,11 @@ class LanguageProcessor:
 
     def process(self, text: str) -> Tuple[str, list[str], torch.Tensor]:
         normalized_text = self.text_normalizer.normalize_text(text)
+        logger.debug('normalized_text: %s', normalized_text)
         phonemes, phoneme_lengths = self.phoneme_converter.convert_to_phonemes(normalized_text)
         bert_features = self.phoneme_converter.get_bert_features(normalized_text, phonemes, phoneme_lengths)
-        phonemes = self.phonemes_to_seq(phonemes)
+        symbols_dict = get_symbols_dict()
+        phonemes = [symbols_dict[phoneme] for phoneme in phonemes]
         return normalized_text, phonemes, bert_features
     
     def phonemes_to_seq(self, phonemes: list[str]) -> list[int]:

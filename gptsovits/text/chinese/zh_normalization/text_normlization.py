@@ -25,7 +25,7 @@ from .chronology import replace_time
 from .constants import F2H_ASCII_LETTERS
 from .constants import F2H_DIGITS
 from .constants import F2H_SPACE
-from .num import RE_DECIMAL_NUM
+from .num import RE_DECIMAL_NUM, RE_DIMENSION, replace_dimension
 from .num import RE_DEFAULT_NUM
 from .num import RE_FRAC
 from .num import RE_INTEGER
@@ -142,6 +142,7 @@ class TextNormalizer():
 
         # 处理~波浪号作为至的替换
         sentence = RE_TO_RANGE.sub(replace_to_range, sentence)
+        sentence = RE_DIMENSION.sub(replace_dimension, sentence)
         sentence = RE_TEMPERATURE.sub(replace_temperature, sentence)
         sentence = replace_measure(sentence)
 

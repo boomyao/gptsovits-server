@@ -250,6 +250,21 @@ def replace_to_range(match) -> str:
     result = match.group(0).replace('~', '至')
     return result
 
+RE_DIMENSION = re.compile(r'(\d+(\.\d+)?)\s*([a-zA-Z²³㎡^0-9]+)\s*\*\s*(\d+(\.\d+)?)\s*([a-zA-Z²³㎡^0-9]+)')
+
+def replace_dimension(match) -> str:
+    """
+    Args:
+        match (re.Match)
+    Returns:
+        str
+    """
+    num1 = float(match.group(1)) if '.' in match.group(1) else int(match.group(1))
+    unit1 = match.group(3)
+    num2 = float(match.group(4)) if '.' in match.group(4) else int(match.group(4))
+    unit2 = match.group(6)
+
+    return f"{num1}{unit1}乘{num2}{unit2}"
 
 def _get_value(value_string: str, use_zero: bool=True) -> List[str]:
     stripped = value_string.lstrip('0')

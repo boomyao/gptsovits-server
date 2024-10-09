@@ -4,6 +4,7 @@ from gptsovits.text.constants import PUNCTUATION
 from g2p_en.expand import normalize_numbers
 import unicodedata
 from builtins import str as unicode
+from .en_normalization.quantifier import quantifier_normalize
 
 def replace_consecutive_punctuation(text):
     punctuations = ''.join(re.escape(p) for p in PUNCTUATION)
@@ -11,7 +12,6 @@ def replace_consecutive_punctuation(text):
 
 class EnglishTextNormalizer(TextNormalizer):
     def normalize_text(self, text: str) -> str:
-
         rep_map = {
             "[;:：，；]": ",",
             '["’]': "'",
@@ -22,6 +22,7 @@ class EnglishTextNormalizer(TextNormalizer):
         for p, r in rep_map.items():
             text = re.sub(p, r, text)
         
+        text = quantifier_normalize(text)
         text = normalize_numbers(unicode(text))
         text = ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
         text = re.sub("[^ A-Za-z'.,?!\-]", "", text)

@@ -25,7 +25,6 @@ class EnglishPhonemeConverter(PhonemeConverter):
             prons.extend(self._get_pronunciation(o_word, pos))
             prons.extend([" "])
         prons = prons[:-1]
-
         phonemes = self._process_phonemes(prons, get_symbols())
         return phonemes, []
 
@@ -124,10 +123,16 @@ class EnglishPhonemeConverter(PhonemeConverter):
 
     def _resolve_homograph(self, word, pos):
         pron1, pron2, pos1 = self.g2p_model.homograph2features[word]
-        return pron1 if pos.startswith(pos1) else pron2
+        if pos.startswith(pos1):
+            return pron1
+        # pos1比pos长仅出现在read
+        elif len(pos) < len(pos1) and pos == pos1[:len(pos)]:
+            return pron1
+        else:
+            return pron2
 
     def _handle_possessive(self, root_word):
-        phones = self._qryword(root_word)
+        phones = self._qryword(root_word[:-2])[:]
         if phones[-1] in ['P', 'T', 'K', 'F', 'TH', 'HH']:
             return phones + ['S']
         elif phones[-1] in ['S', 'Z', 'SH', 'ZH', 'CH', 'JH']:
@@ -138,6 +143,7 @@ class EnglishPhonemeConverter(PhonemeConverter):
     def _process_phonemes(self, prons, symbols):
       rep_map = {"'": "-"}
       return [
-          rep_map.get(ph, ph) if ph in symbols else ("UNK" if ph == "<unk>" else ph)
+          rep_map.get(ph, ph) if ph not in symbols else ("UNK" if ph == "<unk>" else ph)
           for ph in prons if ph not in [" ", "<pad>", "UW", "</s>", "<s>"]
       ]
+    

@@ -30,6 +30,8 @@ measure_dict = {
     "km": "千米",
     "m2": "平方米",
     "m²": "平方米",
+    "㎡": "平方米",
+    "m³": "立方米",
     "m³": "立方米",
     "m3": "立方米",
     "ml": "毫升",
@@ -57,7 +59,8 @@ def replace_temperature(match) -> str:
 
 
 def replace_measure(sentence) -> str:
-    for q_notation in measure_dict:
-        if q_notation in sentence:
-            sentence = sentence.replace(q_notation, measure_dict[q_notation])
+    for q_notation, replacement in measure_dict.items():
+        # 使用正则表达式匹配数字或中文后边的单位符号
+        pattern = rf'((?:\d+(?:\.\d+)?|[一二三四五六七八九十百千万亿]+))\s*{re.escape(q_notation)}'
+        sentence = re.sub(pattern, rf'\1{replacement}', sentence)
     return sentence
