@@ -1,6 +1,6 @@
-import os, uuid
+import os, uuid, sys
 import logging
-# from .file_service import FileService
+from file_service import FileService
 import requests
 import concurrent.futures
 from gptsovits.contant import pretrained_models_base_path
@@ -10,9 +10,7 @@ REQUIRED_FILES = ['gpt.pth', 'sovits.pth', 'gptsovits.yaml']
 class ModelFileService:
     _instance = None
 
-    def __init__(self, file_service=None):
-        # if not hasattr(self, 'file_service'):
-            # self.file_service = file_service or FileService.get_instance()
+    def __init__(self):
         self.model_dir = 'voices'
         self.logger = logging.getLogger(__name__)
 
@@ -63,10 +61,15 @@ class ModelFileService:
         return True
 
     def download_model(self, model_id):
-        from .file_service import FileService
         file_service = FileService.get_instance()
         files = file_service.list_files(f'voices/{model_id}')
         os.makedirs(pretrained_models_base_path(f'voices/{model_id}'), exist_ok=True)
         os.makedirs(pretrained_models_base_path(f'voices/{model_id}/presets'), exist_ok=True)
         for file in files:
             file_service.download_file(file, pretrained_models_base_path(file))
+
+
+if __name__ == '__main__':
+    model_id = sys.argv[1]
+    model_file_service = ModelFileService()
+    model_file_service.download_model(model_id)
