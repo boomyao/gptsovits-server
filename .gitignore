@@ -3,6 +3,8 @@
 
 
 /pretrained_models/*
+/runtime/*
+*.exe
 
 .DS_Store
 

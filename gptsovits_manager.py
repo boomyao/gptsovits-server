@@ -4,7 +4,7 @@ import os
 import requests
 from tqdm import tqdm
 import concurrent.futures
-from gptsovits.contant import pretrained_models_base_path
+from tools.path import pretrained_models_base_path
 
 VOICE_BASE_DIR = pretrained_models_base_path('voices')
 
@@ -57,7 +57,7 @@ class GPTSovitsManager:
                 for attempt in range(max_retries):
                     try:
                         response = requests.get(f'{prefix}/{file}', stream=True)
-                        response.raise_for_status()  # 如果请求失败，将引发异常
+                        response.raise_for_status()
                         total_size = int(response.headers.get('content-length', 0))
                         with open(output_file, 'wb') as f, tqdm(
                             desc=file,
@@ -80,7 +80,7 @@ class GPTSovitsManager:
             else:
                 return file, False
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
             future_to_file = {executor.submit(download_file, file): file for file in files}
             for future in concurrent.futures.as_completed(future_to_file):
                 file = future_to_file[future]

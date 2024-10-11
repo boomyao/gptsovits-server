@@ -4,7 +4,7 @@ from .feature_extractor import cnhubert
 import numpy as np
 from gptsovits.module.mel_processing import spectrogram_torch
 from .constants import FILTER_LENGTH, HOP_LENGTH, WIN_LENGTH, SAMPLE_RATE
-from gptsovits.contant import pretrained_models_base_path
+from tools.path import pretrained_models_base_path
 
 class SpeechService:
   def __init__(self, device='cuda', dtype=torch.float32):

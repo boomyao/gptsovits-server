@@ -1,4 +1,4 @@
-from gptsovits.contant import pretrained_models_base_path
+from tools.path import pretrained_models_base_path
 import nltk
 nltk.data.path.append(pretrained_models_base_path('nltk'))
 from hyperpyyaml import load_hyperpyyaml

@@ -7,7 +7,7 @@ import jieba_fast.posseg as psg
 from pypinyin import Style, lazy_pinyin
 from pypinyin.contrib.tone_convert import to_initials, to_finals_tone3
 from .tone_sandhi import ToneSandhi
-from gptsovits.contant import pretrained_models_base_path
+from tools.path import pretrained_models_base_path
 
 current_file_path = os.path.dirname(__file__)
 pinyin_to_symbol_map = {

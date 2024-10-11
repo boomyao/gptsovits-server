@@ -6,3 +6,8 @@ def relative_base_path(path: str = ''):
 
 def pretrained_models_base_path(path: str = ''):
     return relative_base_path(os.path.join('pretrained_models', path))
+
+def abs_path(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.abspath(relative_base_path(path))
