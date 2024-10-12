@@ -127,7 +127,7 @@ def download_dub_result(data):
         return {'error': str(e)}
 
 def main():
-    socketio.run(app, host='0.0.0.0', port=55001, allow_unsafe_werkzeug=True, debug=IS_DEBUG)
+    socketio.run(app, host='0.0.0.0', port=os.getenv('PORT', 55001), allow_unsafe_werkzeug=True, debug=IS_DEBUG)
 
 if __name__ == '__main__':
     main()
