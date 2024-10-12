@@ -29,6 +29,7 @@ EXPOSE 6000
 # 设置环境变量
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV PORT=6000
 
 # 运行应用
 CMD ["python3", "app.py"]
