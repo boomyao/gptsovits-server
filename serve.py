@@ -47,13 +47,20 @@ def tts():
         model_id = data.get('model_id')
         ref_id = data.get('ref_id')
         extra_ref_ids = data.get('extra_ref_ids') or []
+        is_upload = data.get('is_upload', False)
         gptsovits = mgr.get(model_id)
         audio = gptsovits.inference(text, ref_id=ref_id, extra_ref_ids=extra_ref_ids)   
 
         wav_io = io.BytesIO()
         sf.write(wav_io, audio, 32000, format='wav')
 
-        return Response(wav_io.getvalue(), content_type='audio/wav')
+        if is_upload:
+            from tools.file_service import FileService
+            file_service = FileService.get_instance()
+            object_name = file_service.upload_tmp_file(wav_io, ext='wav')
+            return {'object_name': object_name}
+        else:
+            return Response(wav_io.getvalue(), content_type='audio/wav')
     except Exception as e:
         logger.error(e, exc_info=True)
         return Response(status=500, response=str(e))

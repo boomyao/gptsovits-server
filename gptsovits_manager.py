@@ -103,3 +103,7 @@ class GPTSovitsManager:
         if self.cached_gptsovits:
             oldest_id = next(iter(self.cached_gptsovits))
             del self.cached_gptsovits[oldest_id]
+
+if __name__ == '__main__':
+    manager = GPTSovitsManager()
+    manager.load_shared_models()
