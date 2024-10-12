@@ -1,17 +1,20 @@
-# 使用 NVIDIA CUDA 基础镜像
-FROM nvidia/cuda:11.8.0-base-ubuntu22.04
+# 使用适用于 arm64 架构的基础镜像
+FROM arm64v8/python:3.10-slim
 
-ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+# 设置环境变量，防止交互式界面影响构建
+ENV DEBIAN_FRONTEND=noninteractive
 
-# 设置工作目录
-WORKDIR /app
+# 替换源列表
+RUN rm -f /etc/apt/sources.list && \
+    echo "deb [arch=arm64] http://mirrors.aliyun.com/debian/ bookworm main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb [arch=arm64] http://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb [arch=arm64] http://mirrors.aliyun.com/debian-security bookworm-security main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb [arch=arm64] http://mirrors.aliyun.com/debian/ bookworm-backports main contrib non-free" >> /etc/apt/sources.list
 
-# 安装 Python 和 pip
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+# 更新软件包列表并安装依赖
+RUN apt-get update && \
+    apt-get install -y libsndfile1 && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app
 
