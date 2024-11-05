@@ -5,6 +5,8 @@ from hyperpyyaml import load_hyperpyyaml
 from gptsovits.frontend import GPTSovitsFrontend
 from gptsovits.model import GPTSovitsModel
 import numpy as np
+import random
+import os
 
 class GPTSovits:
     def __init__(self, id: str):
@@ -46,4 +48,9 @@ class GPTSovits:
         with open('{}/{}.wav'.format(presets_dir, ref_id), 'rb') as f:
             ref_audio = f.read()
         return ref_audio, ref_prompt
+    
+    def get_random_ref_id(self):
+        presets_dir = '{}/presets'.format(self.model_dir)
+        ids = [f.split('.')[0] for f in os.listdir(presets_dir)]
+        return random.choice(ids)
 

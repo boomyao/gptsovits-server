@@ -1,6 +1,6 @@
 import gradio as gr
 from gptsovits_manager import GPTSovitsManager
-from gptsovits.contant import relative_base_path
+from tools.path import relative_base_path
 import uuid
 import soundfile as sf
 import logging
@@ -14,9 +14,11 @@ TMP_PATH = 'tmp'
 TMP_ROOT_DIR = relative_base_path(TMP_PATH)
 
 def generate_audio(text, model_id, preset_id):
-  model = mgr.get(model_id)
+  model = mgr.get(model_id, auto_download=True)
   if not model:
     raise gr.Error(f"模型 {model_id} 不存在")
+  if not preset_id:
+    preset_id = model.get_random_ref_id()
   audio = model.inference(text, ref_id=preset_id)
   
   obj_path = f"{TMP_ROOT_DIR}/{uuid.uuid4()}.wav"

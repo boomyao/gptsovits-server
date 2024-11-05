@@ -45,10 +45,12 @@ def tts():
         data = request.get_json()
         text = data.get('text')
         model_id = data.get('model_id')
-        ref_id = data.get('ref_id')
-        extra_ref_ids = data.get('extra_ref_ids') or []
+        ref_id = data.get('ref_id', None)
+        extra_ref_ids = data.get('extra_ref_ids', [])
         is_upload = data.get('is_upload', False)
-        gptsovits = mgr.get(model_id)
+        gptsovits = mgr.get(model_id, auto_download=True)
+        if not ref_id:
+            ref_id = gptsovits.get_random_ref_id()
         audio = gptsovits.inference(text, ref_id=ref_id, extra_ref_ids=extra_ref_ids)   
 
         wav_io = io.BytesIO()
@@ -58,7 +60,11 @@ def tts():
             from tools.file_service import FileService
             file_service = FileService.get_instance()
             object_name = file_service.upload_tmp_file(wav_io, ext='wav')
-            return {'object_name': object_name}
+            return {
+                'object_name': object_name,
+                'model_id': model_id,
+                'ref_id': ref_id
+            }
         else:
             return Response(wav_io.getvalue(), content_type='audio/wav')
     except Exception as e:

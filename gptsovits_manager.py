@@ -5,7 +5,10 @@ import requests
 from tqdm import tqdm
 import concurrent.futures
 from tools.path import pretrained_models_base_path
-
+from services.mongo import get_collection
+from services.oss import cache_file
+import shutil
+from bson.objectid import ObjectId
 VOICE_BASE_DIR = pretrained_models_base_path('voices')
 
 class GPTSovitsManager:
@@ -13,10 +16,12 @@ class GPTSovitsManager:
         self.cached_gptsovits = {}
         self.memory_threshold = memory_threshold
   
-    def get(self, id: str):
+    def get(self, id: str, auto_download=True):
         if id in self.cached_gptsovits:
             return self.cached_gptsovits[id]
         else:
+            if auto_download:
+                self.download_model(id)
             self._check_and_free_memory()
             gptsovits = GPTSovits(id)
             gptsovits.load()
@@ -92,6 +97,26 @@ class GPTSovitsManager:
                         print(f"文件已存在,跳过: {file}")
                 except Exception as exc:
                     print(f"{file} 下载失败: {exc}")
+
+    def download_model(self, id: str):
+        output_dir = f'{VOICE_BASE_DIR}/{id}'
+        if os.path.exists(output_dir):
+            return
+        voice_collection = get_collection('vocrawl', 'voice')
+        voice = voice_collection.find_one({'_id': ObjectId(id)})
+        if not voice:
+            raise Exception(f'voice {id} not found')
+        cache_file(voice['sovits_object_name'], output_dir, ignore_object_dir=True)
+        cache_file(voice['gpt_object_name'], output_dir, ignore_object_dir=True)
+        shutil.copy('gptsovits.yaml', f'{output_dir}/gptsovits.yaml')
+
+        voice_segment_collection = get_collection('vocrawl', 'voice_segment')
+        voice_segments = voice_segment_collection.find({'voice_id': ObjectId(id)})
+        for voice_segment in voice_segments:
+            ref_audio_path = cache_file(voice_segment['ref_object_name'], f'{output_dir}/presets', ignore_object_dir=True)
+            prompt_file = ref_audio_path.replace('.wav', '.txt')
+            with open(prompt_file, 'w') as f:
+                f.write(voice_segment['ref_text'])
     
     def _check_and_free_memory(self):
         if torch.cuda.is_available():
